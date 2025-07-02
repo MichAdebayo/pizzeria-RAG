@@ -42,20 +42,20 @@ pdf_extraction:
   # Document type detection
   document_classification:
     menu_catalog:
-      keywords: ["pizza", "menu", "carte", "prix", "price", "€"]
-      patterns: ["\\d+[.,]\\d{2}\\s*€", "pizza\\s+\\w+"]
+      keywords: ["pizza", "menu", "carte", "prix", "€", "margherita", "quattro", "napoletana", "fromage", "tomate"]
+      patterns: ["pizza\\s+\\w+", "\\d+[.,]\\d{2}\\s*€", "menu|carte"]
       
     allergen_table:
-      keywords: ["allergène", "allergen", "gluten", "lactose", "arachide"]
-      patterns: ["allergen.*table", "\\bX\\b", "✓", "●"]
+      keywords: ["allergen", "allergène", "gluten", "lactose", "oeuf", "arachide", "noix", "soja", "celeri", "moutarde"]
+      patterns: ["allergen|allergène", "gluten|lactose", "tableau.*allergen"]
       
     recipe:
-      keywords: ["recette", "recipe", "ingrédients", "ingredients", "préparation"]
-      patterns: ["\\d+\\s*min", "\\d+\\s*portions", "étape", "step"]
+      keywords: ["recette", "ingrédients", "preparation", "étapes", "cuisson", "temps", "portions"]
+      patterns: ["recette\\s+\\w+", "ingrédients?\\s*:", "préparation|preparation", "\\d+\\s*min"]
       
     nutrition:
-      keywords: ["nutrition", "calories", "kcal", "valeurs nutritionnelles"]
-      patterns: ["\\d+\\s*kcal", "pour\\s*100g", "per\\s*100g"]
+      keywords: ["calories", "kcal", "protéines", "glucides", "lipides", "nutrition", "valeur", "énergétique"]
+      patterns: ["\\d+\\s*kcal", "valeur.*nutrition", "pour\\s*100\\s*g"]
 
 # OCR Configuration
 ocr_settings:

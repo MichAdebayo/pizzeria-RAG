@@ -44,6 +44,9 @@ class VectorStoreManager:
     
     def get_all_stores(self) -> Dict[str, Chroma]:
         """Get all vector stores"""
+        self.logger.debug(f"Returning vector stores: {list(self.vector_stores.keys())}")
+        for name, store in self.vector_stores.items():
+            self.logger.debug(f"Store {name}: {store} (type: {type(store)})")
         return self.vector_stores
     
     def add_documents_to_store(self, store_name: str, documents: List[Document]):

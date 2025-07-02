@@ -12,6 +12,31 @@ class DocumentParser:
         
         # Load classification patterns from config
         self.classification_patterns = self.config.get('document_classification', {})
+        
+        # Fallback patterns if config is missing
+        if not self.classification_patterns:
+            self.classification_patterns = self._get_default_patterns()
+    
+    def _get_default_patterns(self) -> Dict[str, Dict]:
+        """Default classification patterns if config is missing"""
+        return {
+            'menu_catalog': {
+                'keywords': ['pizza', 'menu', 'carte', 'prix', '€', 'margherita', 'quattro'],
+                'patterns': [r'pizza\s+\w+', r'\d+[.,]\d{2}\s*€']
+            },
+            'allergen_table': {
+                'keywords': ['allergen', 'allergène', 'gluten', 'lactose', 'oeuf'],
+                'patterns': [r'allergen|allergène', r'gluten|lactose']
+            },
+            'recipe': {
+                'keywords': ['recette', 'ingrédients', 'preparation', 'étapes'],
+                'patterns': [r'recette\s+\w+', r'ingrédients?\s*:']
+            },
+            'nutrition': {
+                'keywords': ['calories', 'kcal', 'protéines', 'nutrition'],
+                'patterns': [r'\d+\s*kcal', r'valeur.*nutrition']
+            }
+        }
     
     def classify(self, extracted_content: Dict[str, Any]) -> str:
         """Classify document type based on content"""

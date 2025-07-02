@@ -1,26 +1,17 @@
-from typing import Dict, Any, Optional
-from .base_tool import BaseTool, BaseToolMixin
+from typing import Dict, Any, Optional, Type
+from .base_tool import PizzeriaBaseTool
 import logging
 
 
-class PizzaSearchTool(BaseTool, BaseToolMixin):
+class PizzaSearchTool(PizzeriaBaseTool):
     """Tool for searching pizza information"""
     
-    name = "pizza_search"
-    description = """
-    Search for pizza information including names, descriptions, prices, and general information.
-    Use for questions about: what pizzas are available, pizza descriptions, prices, menu items.
-    Input should be: pizza name or description of what customer is looking for.
-    """
-    
-    def __init__(self, config: Dict[str, Any], vector_store=None):
-        BaseToolMixin.__init__(self, config, vector_store)
-        self.name = "pizza_search"
-        self.description = """
-        Search for pizza information including names, descriptions, prices, and general information.
-        Use for questions about: what pizzas are available, pizza descriptions, prices, menu items.
-        Input should be: pizza name or description of what customer is looking for.
-        """
+    name: str = "pizza_search"
+    description: str = (
+        "Search for pizza information including names, descriptions, prices, and general information. "
+        "Use for questions about: what pizzas are available, pizza descriptions, prices, menu items. "
+        "Input should be: pizza name or description of what customer is looking for."
+    )
     
     def _run(self, query: str) -> str:
         """Search for pizza information"""
@@ -47,6 +38,39 @@ class PizzaSearchTool(BaseTool, BaseToolMixin):
             self.logger.error(f"Pizza search failed: {e}")
             return f"Désolé, une erreur s'est produite lors de la recherche: {str(e)}"
     
-    def run(self, query: str) -> str:
-        """Run the tool (alias for _run for compatibility)"""
-        return self._run(query)
+    def _safe_search(self, query: str, k: int = 5) -> list:
+        """Safely search vector store with fallbacks"""
+        if not self.vector_store:
+            self.logger.warning("No vector store available")
+            return []
+        
+        try:
+            retriever_type = self.config.get('retriever_type', 'similarity')
+            
+            if retriever_type == 'similarity':
+                return self.vector_store.similarity_search(query, k=k)
+            elif retriever_type == 'mmr':
+                return self.vector_store.max_marginal_relevance_search(query, k=k)
+            else:
+                return self.vector_store.similarity_search(query, k=k)
+                
+        except Exception as e:
+            self.logger.error(f"Search failed: {e}")
+            return []
+    
+    def _format_documents(self, docs: list) -> str:
+        """Format documents for response"""
+        if not docs:
+            return "Aucune information trouvée."
+        
+        formatted = []
+        for doc in docs:
+            content = doc.page_content if hasattr(doc, 'page_content') else str(doc)
+            
+            # Add source if available
+            if hasattr(doc, 'metadata') and doc.metadata.get('source'):
+                content += f"\n(Source: {doc.metadata['source']})"
+            
+            formatted.append(content)
+        
+        return "\n\n".join(formatted)

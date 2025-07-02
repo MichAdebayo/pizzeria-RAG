@@ -26,16 +26,17 @@ class PizzeriaRAGApp:
         )
         
         # Initialize LangChain manager with fallback
+        self.langchain_manager = None
+        self.system_status = "⚠️ Initialisation en cours..."
+        
         try:
             if LANGCHAIN_AVAILABLE:
                 self.langchain_manager = LangChainManager(str(Settings.AGENTS_CONFIG))
                 self.system_status = "✅ Système opérationnel"
             else:
-                self.langchain_manager = None
                 self.system_status = "⚠️ Mode développement (LangChain non disponible)"
         except Exception as e:
             logging.error(f"Failed to initialize LangChain manager: {e}")
-            self.langchain_manager = None
             self.system_status = f"⚠️ Erreur d'initialisation: {str(e)[:100]}"
         
     def chat_response(self, message, history):
@@ -45,21 +46,29 @@ class PizzeriaRAGApp:
                 result = self.langchain_manager.query(message)
                 
                 if result['status'] == 'success':
-                    return result['response']
+                    response = result['response']
                 else:
-                    return f"Désolé, une erreur s'est produite: {result.get('error', 'Erreur inconnue')}"
+                    response = f"Désolé, une erreur s'est produite: {result.get('error', 'Erreur inconnue')}"
             else:
                 # Fallback response when system is not fully operational
-                return (f"🍕 Bonjour! Je suis l'assistant de la Pizzeria Bella Napoli.\n\n"
-                       f"Vous avez demandé: \"{message}\"\n\n"
-                       f"⚠️ Le système complet n'est pas encore opérationnel. "
-                       f"Veuillez exécuter le script de configuration d'abord:\n"
-                       f"```\npython scripts/setup_environment.py\n```\n\n"
-                       f"Status: {self.system_status}")
+                response = (f"🍕 Bonjour! Je suis l'assistant de la Pizzeria Bella Napoli.\n\n"
+                           f"Vous avez demandé: \"{message}\"\n\n"
+                           f"⚠️ Le système complet n'est pas encore opérationnel. "
+                           f"Veuillez exécuter le script de configuration d'abord:\n"
+                           f"```\npython scripts/setup_environment.py\n```\n\n"
+                           f"Status: {self.system_status}")
+            
+            # Add to history in the new messages format
+            history.append({"role": "user", "content": message})
+            history.append({"role": "assistant", "content": response})
+            return history, ""
                 
         except Exception as e:
             logging.error(f"Chat error: {e}")
-            return f"Désolé, une erreur s'est produite: {str(e)}"
+            error_response = f"Désolé, une erreur s'est produite: {str(e)}"
+            history.append({"role": "user", "content": message})
+            history.append({"role": "assistant", "content": error_response})
+            return history, ""
     
     def create_interface(self):
         """Create Gradio interface"""
@@ -77,7 +86,8 @@ class PizzeriaRAGApp:
             chatbot = gr.Chatbot(
                 height=500,
                 placeholder="Bonjour! Comment puis-je vous aider avec nos pizzas?",
-                label="Assistant Pizzeria"
+                label="Assistant Pizzeria",
+                type="messages"  # Use the new messages format
             )
             
             with gr.Row():
@@ -91,9 +101,9 @@ class PizzeriaRAGApp:
             clear_btn = gr.Button("Nouvelle conversation", variant="secondary")
             
             # Event handlers
-            msg.submit(self.chat_response, [msg, chatbot], [chatbot])
-            submit_btn.click(self.chat_response, [msg, chatbot], [chatbot])
-            clear_btn.click(lambda: None, None, chatbot, queue=False)
+            msg.submit(self.chat_response, [msg, chatbot], [chatbot, msg])
+            submit_btn.click(self.chat_response, [msg, chatbot], [chatbot, msg])
+            clear_btn.click(lambda: ([], ""), None, [chatbot, msg], queue=False)
             
             # Examples
             gr.Examples(

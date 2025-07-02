@@ -43,6 +43,11 @@ class LangChainManager:
             return HuggingFaceEmbeddings(
                 model_name=embedding_config['model']
             )
+        elif embedding_config['provider'] == 'ollama':
+            from langchain_community.embeddings import OllamaEmbeddings
+            return OllamaEmbeddings(
+                model=embedding_config['model']
+            )
     
     def _setup_llm(self):
         """Setup LLM"""
@@ -70,14 +75,27 @@ class LangChainManager:
         try:
             # Import tools dynamically to avoid import errors
             try:
-                from src.tools import PizzaSearchTool, AllergenCheckTool, IngredientLookupTool, NutritionInfoTool
+                from src.tools import PizzaSearchTool, AllergenCheckTool
+                
+                # Try to import the v2 tools, fallback to original if needed
+                try:
+                    from src.tools.ingredient_lookup_tool_v2 import IngredientLookupTool
+                    from src.tools.nutrition_info_tool_v2 import NutritionInfoTool
+                except ImportError:
+                    from src.tools import IngredientLookupTool, NutritionInfoTool
+                
                 tools_available = True
-            except ImportError:
-                logging.warning("Tools not available, using fallback")
+                self.logger.info("Successfully imported all tools")
+            except ImportError as e:
+                logging.warning(f"Tools not available, using fallback: {e}")
                 tools_available = False
             
             if tools_available:
                 vector_stores = self.vector_store_manager.get_all_stores()
+                
+                # Debug logging
+                self.logger.info(f"Available vector stores: {list(vector_stores.keys())}")
+                self.logger.info(f"Tools config: {list(self.config.get('tools', {}).keys())}")
                 
                 tool_classes = {
                     'pizza_search': PizzaSearchTool,
@@ -89,17 +107,27 @@ class LangChainManager:
                 for tool_name, tool_config in self.config.get('tools', {}).items():
                     if tool_name in tool_classes:
                         vector_store_name = tool_config.get('vector_store', 'pizza_descriptions')
-                        vector_store = vector_stores.get(vector_store_name)
                         
-                        if vector_store:
-                            tool_instance = tool_classes[tool_name](
-                                config=tool_config,
-                                vector_store=vector_store
-                            )
-                            tools.append(tool_instance)
-                            self.logger.info(f"Initialized tool: {tool_name}")
+                        self.logger.info(f"Tool {tool_name} looking for vector store: {vector_store_name}")
+                        self.logger.info(f"Vector stores type: {type(vector_stores)}")
+                        self.logger.info(f"Vector stores content: {vector_stores}")
+                        
+                        vector_store = vector_stores.get(vector_store_name)
+                        self.logger.info(f"Retrieved vector store: {vector_store} (type: {type(vector_store)})")
+                        
+                        if vector_store is not None:
+                            try:
+                                tool_instance = tool_classes[tool_name](
+                                    config=tool_config,
+                                    vector_store=vector_store
+                                )
+                                tools.append(tool_instance)
+                                self.logger.info(f"Successfully initialized tool: {tool_name}")
+                            except Exception as e:
+                                self.logger.error(f"Failed to create tool {tool_name}: {e}")
                         else:
                             self.logger.warning(f"Vector store {vector_store_name} not found for tool {tool_name}")
+                            self.logger.warning(f"Available stores: {list(vector_stores.keys())}")
             else:
                 # Create fallback tools
                 tools = [MockTool()]
@@ -114,22 +142,23 @@ class LangChainManager:
     def _setup_agent(self):
         """Create ReAct agent with custom prompt"""
         prompt = PromptTemplate.from_template("""
-        Vous êtes un assistant pour la Pizzeria Bella Napoli. Vous aidez les clients avec:
-        - Les informations sur les pizzas et les prix
+        Vous êtes un assistant pour les pizzerias. Vous aidez les clients avec:
+        - Les informations sur les pizzas, leurs sources (pizzerias) et les prix
         - Les listes d'ingrédients et informations allergènes (CRITIQUE - toujours vérifier)
         - Les informations nutritionnelles
-        - Questions générales sur nos pizzas
+        - Questions générales sur les pizzas
 
         RÈGLES DE SÉCURITÉ:
         - Pour les questions allergènes, TOUJOURS utiliser l'outil allergen_safety_check
         - Si la confiance est < 99%, demander au client de contacter directement le restaurant
         - Être précis et utile avec les informations d'ingrédients
-        - Toujours citer vos sources
+        - Toujours citer vos sources ET la pizzeria d'origine
+        - IMPORTANT: Indiquez clairement quelle pizzeria propose chaque pizza
 
         Vous avez accès aux outils suivants:
         {tools}
 
-        Utilisez le format suivant:
+        Utilisez EXACTEMENT ce format:
 
         Question: la question d'entrée à laquelle vous devez répondre
         Pensée: vous devez toujours réfléchir à ce qu'il faut faire
@@ -186,11 +215,16 @@ class LangChainManager:
 
 # Mock classes for fallback when components are not available
 class MockTool:
-    name = "mock_tool"
-    description = "Tool de développement"
+    def __init__(self):
+        self.name = "mock_tool"
+        self.description = "Tool de développement"
     
     def run(self, query):
-        return f"Recherche pour: {query}"
+        return f"Recherche pour: {query} (Mode développement - LangChain non configuré)"
+    
+    def get(self, key, default=None):
+        """Mock the get method for compatibility"""
+        return getattr(self, key, default)
 
 
 class MockAgent:

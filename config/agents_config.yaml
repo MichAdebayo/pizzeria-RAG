@@ -8,8 +8,8 @@ langchain_config:
   
   # Embedding model for vector stores
   embeddings:
-    provider: "huggingface"  
-    model: "mixedbread-ai/mxbai-embed-large"  
+    provider: "ollama"  
+    model: "mxbai-embed-large"  
   
   # Vector store configuration
   vector_stores:

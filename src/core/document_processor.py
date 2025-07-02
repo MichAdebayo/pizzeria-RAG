@@ -8,7 +8,8 @@ from src.parsers.document_parser import DocumentParser
 from src.parsers.pizza_parser import PizzaParser
 from src.parsers.allergen_parser import AllergenParser
 from src.parsers.recipe_parser import RecipeParser
-from src.utils.chunking import DocumentChunker, QualityAssessment
+from src.utils.chunking import DocumentChunker
+from src.utils.quality_assessment import QualityAssessment
 
 
 class DocumentProcessor:

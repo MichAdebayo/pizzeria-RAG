@@ -1,28 +1,22 @@
 from typing import Dict, Any, Optional
-from .base_tool import BaseTool, BaseToolMixin
+from .base_tool import PizzeriaBaseTool
 import logging
 
 
-class AllergenCheckTool(BaseTool, BaseToolMixin):
+class AllergenCheckTool(PizzeriaBaseTool):
     """CRITICAL SAFETY TOOL: Check allergen information for pizzas"""
     
-    name = "allergen_safety_check"
-    description = """
-    CRITICAL SAFETY TOOL: Check allergen information for pizzas.
-    Use this tool for ANY question about allergies, allergens, or dietary restrictions.
-    Input should be: pizza name and allergen concern (e.g., "Margherita gluten")
-    """
+    name: str = "allergen_safety_check"
+    description: str = (
+        "CRITICAL SAFETY TOOL: Check allergen information for pizzas. "
+        "Use this tool for ANY question about allergies, allergens, or dietary restrictions. "
+        "Input should be: pizza name and allergen concern (e.g., 'Margherita gluten')"
+    )
     
     def __init__(self, config: Dict[str, Any], vector_store=None):
-        BaseToolMixin.__init__(self, config, vector_store)
-        self.name = "allergen_safety_check"
+        super().__init__(config, vector_store)
         self.safety_threshold = config.get('confidence_threshold', 0.99)
         self.safety_mode = config.get('safety_mode', True)
-        self.description = """
-        CRITICAL SAFETY TOOL: Check allergen information for pizzas.
-        Use this tool for ANY question about allergies, allergens, or dietary restrictions.
-        Input should be: pizza name and allergen concern (e.g., "Margherita gluten")
-        """
     
     def _run(self, query: str) -> str:
         """Execute allergen safety check"""
