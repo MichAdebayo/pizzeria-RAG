@@ -1,7 +1,7 @@
 # 🍕 Pizzeria RAG - Assistant de Recherche Multi-Documents
 
 <div align="center">
-  <img src="assets/pizza_asset.webp" alt="Pizzeria RAG System" width="400">
+  <img src="assets/pizza_asset.webp" alt="Pizzeria RAG System" width="800">
 </div>
 
 Un système RAG (Retrieval-Augmented Generation) moderne pour interroger plusieurs menus de pizzerias avec Ollama et ChromaDB.
