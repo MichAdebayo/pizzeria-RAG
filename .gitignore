@@ -22,6 +22,7 @@ logs/
 
 # Environment files
 .env
+.env.example
 
 # Docs and data folders
 docs/
