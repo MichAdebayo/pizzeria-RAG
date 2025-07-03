@@ -9,6 +9,7 @@ A modern RAG (Retrieval-Augmented Generation) system for querying multiple pizze
 ## 🚀 Features
 
 - **Multi-Document RAG**: Simultaneous search across multiple pizzeria menus
+- **🚨 Smart Allergen Detection**: Comprehensive allergen analysis and safety warnings
 - **Modern Interface**: Chainlit and Gradio for optimal user experience
 - **Local-First**: Uses Ollama for embeddings and LLM (no cloud dependency)
 - **Modular Architecture**: Clean, maintainable and extensible code
@@ -137,6 +138,9 @@ print(result['answer'])
 - **Specific**: "At Anchor Pizza, what's the price of the Margherita?"
 - **Comparative**: "Compare prices between Marco Fuso and Anchor Pizza"
 - **Detailed**: "What are the ingredients in the Veggie Triumph?"
+- **🚨 Allergen-Related**: "I'm allergic to gluten and dairy, what can I eat?"
+- **Safety**: "Do you have pizzas without nuts?"
+- **Multiple Allergens**: "I need to avoid gluten, eggs, and shellfish"
 
 ## 🔧 System Commands (Chainlit)
 
@@ -155,6 +159,43 @@ Processed data is stored in:
 - `data/processed/` - Structured JSONs
 - `data/vector_db/` - ChromaDB vector database
 
+## 🚨 Allergen Detection System
+
+The system includes comprehensive allergen detection and safety features:
+
+### 📋 Supported Allergens (EU Standards)
+- **Gluten** (wheat, rye, barley, oats, spelt, kamut)
+- **Crustaceans** (shrimp, lobster, crab, langoustine)
+- **Eggs** (albumin, lecithin)
+- **Fish** (anchovy, tuna, salmon, sardine)
+- **Peanuts** (groundnuts, peanut butter)
+- **Soy** (soy sauce, soy lecithin, soy protein)
+- **Milk** (lactose, casein, whey, cheese, cream)
+- **Tree Nuts** (almonds, hazelnuts, walnuts, pistachios)
+- **Celery** (celery root, celery seed)
+- **Mustard** (mustard seeds, mustard powder)
+- **Sesame** (sesame seeds, sesame oil, tahini)
+- **Sulfites** (sulfur dioxide, preservatives E220-E228)
+- **Lupin** (lupin flour, lupin protein)
+- **Mollusks** (oysters, mussels, scallops, squid)
+
+### 🔍 Smart Detection Features
+- **Automatic User Allergen Detection**: Extracts allergens from user questions
+- **Ingredient Analysis**: Scans menu items for allergen presence
+- **Multi-Pattern Recognition**: Handles various expression formats
+  - "I'm allergic to gluten and dairy"
+  - "No nuts please"
+  - "Avoiding shellfish"
+  - "Lactose intolerant"
+- **Safety Warnings**: Always displays allergen information, even when not asked
+- **Alternative Suggestions**: Recommends suitable options based on restrictions
+
+### 🛡️ Safety First Approach
+- **Always Visible**: Allergen info included in every response
+- **Clear Warnings**: Uses emoji indicators (⚠️ for warnings, ✅ for safe)
+- **Multi-Restaurant Analysis**: Compares allergen safety across different menus
+- **Comprehensive Coverage**: Analyzes ingredients, sauces, and preparation methods
+
 ## ⚙️ Configuration
 
 Modify `config/config.py` to adjust:
@@ -168,6 +209,8 @@ Modify `config/config.py` to adjust:
 - **Vector database**: ChromaDB stored locally and not exposed
 - **Sensitive files**: `.env`, logs and caches automatically ignored
 - **Clean history**: Complete removal of sensitive files from Git
+- **Allergen Configuration**: Comprehensive allergen detection with 14 major allergens
+- **Safety Features**: Always-visible allergen warnings and alternative suggestions
 
 ## 🐛 Troubleshooting
 
@@ -214,6 +257,8 @@ Modify `config/config.py` to adjust:
 ### Recent improvements:
 - **Clean Chainlit interface**: Status system moved to system commands
 - **Clean user responses**: Removal of technical information from responses
+- **🚨 Comprehensive Allergen Detection**: 14 major allergens with smart detection
+- **Safety-First Approach**: Always-visible allergen warnings and recommendations
 - **Refactored architecture**: Clear code organization in modules
 - **Avatar management**: Modern user interfaces with avatars
 - **Launch scripts**: Simplified startup with automatic checks

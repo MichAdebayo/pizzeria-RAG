@@ -132,10 +132,13 @@ class LLMInterface:
         return None
     
     def create_prompt(self, user_question: str, context_data: Dict, document_names: Optional[Union[str, List[str]]] = None) -> str:
-        """Create a prompt with context for the LLM (enhanced for multi-company)"""
+        """Create a prompt with context for the LLM (enhanced for multi-company and allergens)"""
         
         context_by_company = context_data['context_by_company']
         has_multiple_companies = context_data['has_multiple_companies']
+        
+        # Get allergen information for all contexts
+        allergen_info = self.get_allergen_info_for_context(context_data)
         
         # Format context based on whether we have multiple companies
         if has_multiple_companies:
@@ -145,6 +148,13 @@ class LLMInterface:
                 context_text += f"🍕 {company_name.upper()}:\n"
                 for ctx in company_contexts:
                     context_text += f"   {ctx}\n"
+                
+                # Add allergen information for this company
+                if company_name in allergen_info and allergen_info[company_name]:
+                    allergens = ", ".join(allergen_info[company_name])
+                    context_text += f"   ⚠️ ALLERGÈNES DÉTECTÉS: {allergens}\n"
+                else:
+                    context_text += f"   ✅ AUCUN ALLERGÈNE MAJEUR DÉTECTÉ\n"
                 context_text += "\n"
         else:
             # Single company format (like the original working version)
@@ -153,6 +163,23 @@ class LLMInterface:
             for company_contexts in context_by_company.values():
                 for ctx in company_contexts:
                     context_text += f"{ctx}\n\n"
+            
+            # Add allergen information for single company
+            if company_name in allergen_info and allergen_info[company_name]:
+                allergens = ", ".join(allergen_info[company_name])
+                context_text += f"⚠️ ALLERGÈNES DÉTECTÉS: {allergens}\n\n"
+            else:
+                context_text += f"✅ AUCUN ALLERGÈNE MAJEUR DÉTECTÉ\n\n"
+        
+        # Add comprehensive allergen list for reference
+        allergen_list = config.allergen.allergens_list or []
+        all_allergens = ", ".join(allergen_list)
+        context_text += f"\nLISTE COMPLÈTE DES ALLERGÈNES À SURVEILLER:\n{all_allergens}\n\n"
+        
+        # Extract user allergens from question for targeted warnings
+        user_allergens = self.extract_user_allergens_from_question(user_question)
+        if user_allergens:
+            context_text += f"⚠️ ATTENTION: Le client a mentionné être allergique à: {', '.join(user_allergens)}\n\n"
         
         # Determine response strategy
         if has_multiple_companies:
@@ -163,6 +190,11 @@ class LLMInterface:
 - Si un restaurant spécifique est mentionné, concentre-toi sur celui-ci
 - Sois précis sur quel restaurant offre quoi
 - Format: "Chez [Nom Restaurant]: [info]" pour chaque restaurant
+- PRIORITÉ ABSOLUE: TOUJOURS inclure les informations d'allergènes pour chaque pizza mentionnée
+- Si des allergènes sont détectés, AVERTIS CLAIREMENT le client avec des emojis ⚠️
+- Si le client mentionne des allergies spécifiques, VÉRIFIE LA COMPATIBILITÉ
+- Suggère des alternatives sans allergènes si nécessaire
+- Utilise le format: "⚠️ Allergènes: [liste]" ou "✅ Aucun allergène majeur détecté"
 - Reste dans le rôle d'un assistant de groupe de pizzerias"""
         else:
             system_role = "Tu es un assistant de pizzeria. Réponds en français, sois précis et utile."
@@ -170,6 +202,11 @@ class LLMInterface:
 - Réponds uniquement en français
 - Base-toi uniquement sur les informations du contexte fourni
 - Si l'information n'est pas dans le contexte, dis-le clairement
+- PRIORITÉ ABSOLUE: TOUJOURS inclure les informations d'allergènes pour chaque pizza mentionnée
+- Si des allergènes sont détectés, AVERTIS CLAIREMENT le client avec des emojis ⚠️
+- Si le client mentionne des allergies spécifiques, VÉRIFIE LA COMPATIBILITÉ
+- Utilise le format: "⚠️ Allergènes: [liste]" ou "✅ Aucun allergène majeur détecté"
+- Suggère des alternatives sans allergènes si nécessaire
 - Sois précis et utile
 - Reste dans le rôle d'un assistant de pizzeria"""
         
@@ -234,9 +271,13 @@ Pour activer la fonctionnalité complète:
 1. Lancez Ollama: ollama serve
 2. Vérifiez que les modèles sont disponibles: ollama list"""
     
-    def answer_question(self, question: str, document_names: Optional[Union[str, List[str]]] = None) -> Dict:
-        """Complete RAG pipeline: retrieve context and generate answer (enhanced for multi-company)"""
+    def answer_question(self, question: str, document_names: Optional[Union[str, List[str]]] = None, user_allergens: Optional[List[str]] = None) -> Dict:
+        """Complete RAG pipeline: retrieve context and generate answer (enhanced for multi-company and allergens)"""
         try:
+            # Auto-detect user allergens from the question if not provided
+            if user_allergens is None:
+                user_allergens = self.extract_user_allergens_from_question(question)
+            
             # Auto-detect company if not specified and question contains company name
             if document_names is None:
                 detected_company = self._detect_company_in_query(question)
@@ -246,11 +287,34 @@ Pour activer la fonctionnalité complète:
             # Step 1: Get relevant context with company grouping
             context_data = self.get_context(question, document_names=document_names)
             
-            # Step 2: Create prompt
+            # Step 2: Get allergen information
+            allergen_info = self.get_allergen_info_for_context(context_data)
+            
+            # Step 3: Create prompt with allergen awareness
             prompt = self.create_prompt(question, context_data, document_names=document_names)
             
-            # Step 3: Query LLM
+            # Step 4: Query LLM
             answer = self.query_llm(prompt)
+            
+            # Step 5: Add allergen analysis to the response
+            allergen_analysis = ""
+            if user_allergens:
+                allergen_analysis = self.suggest_alternatives_for_allergens(user_allergens, context_data)
+                self.logger.info(f"🚨 User allergens detected: {', '.join(user_allergens)}")
+            
+            # Always add detected allergens summary for transparency
+            if allergen_info:
+                allergen_summary = "\n\n🧾 **Résumé allergènes détectés:**\n"
+                for company_name, allergens in allergen_info.items():
+                    if allergens:
+                        allergen_summary += f"• {company_name}: {', '.join(allergens)}\n"
+                    else:
+                        allergen_summary += f"• {company_name}: Aucun allergène majeur détecté\n"
+                answer += allergen_summary
+            
+            # Add user-specific allergen analysis if provided
+            if allergen_analysis:
+                answer += allergen_analysis
             
             return {
                 "status": "success",
@@ -260,7 +324,9 @@ Pour activer la fonctionnalité complète:
                 "has_context": bool(context_data['context_by_company']),
                 "searched_documents": document_names or [doc.name for doc in config.documents],
                 "has_multiple_companies": context_data['has_multiple_companies'],
-                "companies_found": list(context_data['context_by_company'].keys())
+                "companies_found": list(context_data['context_by_company'].keys()),
+                "allergen_info": allergen_info,
+                "user_allergens": user_allergens or []
             }
             
         except Exception as e:
@@ -273,9 +339,87 @@ Pour activer la fonctionnalité complète:
                 "has_context": False,
                 "searched_documents": [],
                 "has_multiple_companies": False,
-                "companies_found": []
+                "companies_found": [],
+                "allergen_info": {},
+                "user_allergens": user_allergens or []
             }
     
+    def extract_user_allergens_from_question(self, question: str) -> List[str]:
+        """Extract user allergens mentioned in the question"""
+        question_lower = question.lower()
+        user_allergens = []
+        
+        # Check for allergen mentions in the question
+        allergen_keywords = config.allergen.get_allergen_keywords()
+        
+        # First, look for general allergen context indicators
+        allergen_context_indicators = [
+            "allergique", "allergie", "allergies", "allergène", "allergènes",
+            "intolerance", "intolérant", "sans", "éviter", "peut pas manger",
+            "ne peux pas manger", "ne mange pas"
+        ]
+        
+        has_allergen_context = any(indicator in question_lower for indicator in allergen_context_indicators)
+        
+        # If there's allergen context, be more liberal in detecting allergens
+        if has_allergen_context:
+            for allergen, keywords in allergen_keywords.items():
+                for keyword in keywords:
+                    if keyword in question_lower:
+                        # Check for negative context (allergic to, can't eat, etc.)
+                        allergen_patterns = [
+                            f"allergique au {keyword}",
+                            f"allergique à {keyword}",
+                            f"allergique aux {keyword}",
+                            f"allergie au {keyword}",
+                            f"allergie à {keyword}",
+                            f"allergie aux {keyword}",
+                            f"pas de {keyword}",
+                            f"sans {keyword}",
+                            f"éviter {keyword}",
+                            f"ne peut pas manger {keyword}",
+                            f"ne peux pas manger {keyword}",
+                            f"ne mange pas {keyword}",
+                            f"intolérant au {keyword}",
+                            f"intolérant à {keyword}",
+                            f"intolerance au {keyword}",
+                            f"intolerance à {keyword}",
+                            f"éviter les {keyword}",
+                            f"allergie aux {keyword}",
+                            f"peut pas manger de {keyword}",
+                            f"ne peux pas manger de {keyword}"
+                        ]
+                        
+                        # Check specific patterns first
+                        pattern_found = False
+                        for pattern in allergen_patterns:
+                            if pattern in question_lower:
+                                if allergen not in user_allergens:
+                                    user_allergens.append(allergen)
+                                pattern_found = True
+                                break
+                        
+                        # If no specific pattern found but allergen context exists
+                        # and keyword is mentioned, consider it an allergen
+                        if not pattern_found and has_allergen_context:
+                            # Additional check for compound mentions like "allergique au gluten et au lait"
+                            if any(context in question_lower for context in ["allergique", "allergie", "sans", "éviter"]):
+                                if allergen not in user_allergens:
+                                    user_allergens.append(allergen)
+        
+        return user_allergens
+    
+    def is_allergen_related_question(self, question: str) -> bool:
+        """Check if the question is related to allergens"""
+        allergen_indicators = [
+            "allergique", "allergie", "allergies", "allergène", "allergènes",
+            "intolerance", "intolérant", "sans", "éviter", "peut pas manger",
+            "gluten", "lactose", "végétalien", "vegan", "végétarien"
+        ]
+        
+        question_lower = question.lower()
+        return any(indicator in question_lower for indicator in allergen_indicators)
+
     def get_available_documents(self) -> Dict[str, str]:
         """Get available documents for selection"""
         return config.get_available_documents()
@@ -319,6 +463,62 @@ Pour activer la fonctionnalité complète:
             }
         
         return status
+    
+    def detect_allergens_in_text(self, text: str) -> List[str]:
+        """Detect allergens present in ingredient text"""
+        if not text:
+            return []
+        
+        text_lower = text.lower()
+        detected_allergens = []
+        allergen_keywords = config.allergen.get_allergen_keywords()
+        
+        for allergen, keywords in allergen_keywords.items():
+            for keyword in keywords:
+                if keyword in text_lower:
+                    if allergen not in detected_allergens:
+                        detected_allergens.append(allergen)
+                    break  # Found this allergen, no need to check other keywords
+        
+        return detected_allergens
+    
+    def get_allergen_info_for_context(self, context_data: Dict) -> Dict[str, List[str]]:
+        """Extract allergen information from context data"""
+        allergen_info = {}
+        
+        for company_name, company_contexts in context_data['context_by_company'].items():
+            company_allergens = set()
+            
+            for context in company_contexts:
+                # Detect allergens in each context piece
+                detected = self.detect_allergens_in_text(context)
+                company_allergens.update(detected)
+            
+            allergen_info[company_name] = sorted(list(company_allergens))
+        
+        return allergen_info
+    
+    def suggest_alternatives_for_allergens(self, user_allergens: List[str], context_data: Dict) -> str:
+        """Suggest pizza alternatives based on user's allergen restrictions"""
+        if not user_allergens:
+            return ""
+        
+        allergen_info = self.get_allergen_info_for_context(context_data)
+        suggestions = []
+        
+        for company_name, company_allergens in allergen_info.items():
+            # Check if any of the user's allergens are present
+            has_allergens = any(allergen in company_allergens for allergen in user_allergens)
+            
+            if not has_allergens:
+                suggestions.append(f"✅ {company_name}: Semble compatible avec vos restrictions")
+            else:
+                conflicting = [allergen for allergen in user_allergens if allergen in company_allergens]
+                suggestions.append(f"⚠️ {company_name}: Contient {', '.join(conflicting)}")
+        
+        if suggestions:
+            return "\n\n🔍 **Analyse allergènes:**\n" + "\n".join(suggestions)
+        return ""
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)

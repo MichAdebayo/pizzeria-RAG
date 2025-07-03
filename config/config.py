@@ -4,7 +4,7 @@ Based on the working simple_* implementation, now generalized for multiple docum
 """
 
 from dataclasses import dataclass
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from pathlib import Path
 
 @dataclass
@@ -34,12 +34,56 @@ class DocumentConfig:
     language: str = "fr"
     content_type: str = "menu"
 
+@dataclass
+class AllergenConfig:
+    """Configuration for allergen detection and management"""
+    allergens_list: Optional[List[str]] = None
+    
+    def __post_init__(self):
+        if self.allergens_list is None:
+            self.allergens_list = [
+                "Gluten",
+                "Crustacés", 
+                "Oeufs",
+                "Poissons",
+                "Arachides",
+                "Soja",
+                "Lait",
+                "Fruits à coque",
+                "Céleri",
+                "Moutarde",
+                "Sésame",
+                "Sulfites",
+                "Lupin",
+                "Mollusques"
+            ]
+    
+    def get_allergen_keywords(self) -> Dict[str, List[str]]:
+        """Get keywords to detect each allergen in ingredients"""
+        return {
+            "Gluten": ["gluten", "blé", "froment", "épeautre", "kamut", "seigle", "orge", "avoine", "farine"],
+            "Crustacés": ["crustacés", "crustacé", "crevette", "homard", "crabe", "langoustine", "écrevisse"],
+            "Oeufs": ["oeuf", "œuf", "oeufs", "œufs", "albumine", "lecithine d'oeuf"],
+            "Poissons": ["poisson", "poissons", "anchois", "thon", "saumon", "sardine", "colin", "cabillaud"],
+            "Arachides": ["arachide", "arachides", "cacahuète", "cacahouète", "beurre de cacahuète"],
+            "Soja": ["soja", "sauce soja", "lecithine de soja", "protéine de soja"],
+            "Lait": ["lait", "crème", "beurre", "fromage", "yaourt", "lactose", "caséine", "lactosérum"],
+            "Fruits à coque": ["fruits à coque", "amande", "noisette", "noix", "pistache", "cajou", "pécan", "macadamia", "pignon"],
+            "Céleri": ["céleri", "céleri-rave"],
+            "Moutarde": ["moutarde", "graines de moutarde"],
+            "Sésame": ["sésame", "graines de sésame", "huile de sésame", "tahini"],
+            "Sulfites": ["sulfite", "sulfites", "anhydride sulfureux", "E220", "E221", "E222", "E223", "E224", "E225", "E226", "E227", "E228"],
+            "Lupin": ["lupin", "farine de lupin"],
+            "Mollusques": ["mollusque", "mollusques", "escargot", "huître", "moule", "coquille saint-jacques", "calmar", "poulpe"]
+        }
+
 class ModularConfig:
     """Main configuration class for the modular RAG system"""
     
     def __init__(self):
         self.models = ModelConfig()
         self.vector_store = VectorStoreConfig()
+        self.allergen = AllergenConfig()
         
         # Paths (set these first)
         self.base_path = Path(".")
