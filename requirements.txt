@@ -1,37 +1,21 @@
-# Core dependencies for the modular pizzeria RAG system
-# Based on the working simple_requirements.txt, optimized for production use
+# Core dependencies for the Pizzeria RAG system
+# Based on actual imports used in the codebase
 
 # PDF processing
-PyMuPDF==1.23.8
-pdfplumber==0.10.3
+PyMuPDF 
+pdfplumber  
 
 # Vector database and embeddings
-chromadb==0.4.18
+chromadb 
 
 # LLM interface
-ollama==0.1.7
+ollama
 
-# Web interface - Modern chat interface
-chainlit==1.0.200
-gradio==4.0.0
+# Web interfaces
+chainlit 
+gradio
 
-# Data processing and utilities
-pandas==2.1.4
-numpy==1.24.3
-
-# HTTP and networking
-httpx==0.25.2
-requests==2.31.0
-
-# Logging and configuration
-python-dotenv==1.0.0
-pyyaml==6.0.1
-
-# Development and testing (optional)
-pytest==7.4.3
-black==23.11.0
-flake8==6.1.0
-
-# System utilities
-pathlib2==2.3.7
-typing-extensions==4.8.0
+# OCR capabilities (optional)
+pytesseract  # used in ocr_extractor.py
+Pillow  # imported as PIL in ocr_extractor.py
+numpy  # used in ocr_extractor.py
