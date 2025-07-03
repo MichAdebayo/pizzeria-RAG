@@ -1,7 +1,24 @@
+# Python
 .venv/
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+.Python
+
+# Databases and data
 *chroma.sqlite3
+data/vector_db/
+
+# Logs and temporary files
 logs/
+*.log
+.DS_Store
+.files/
+
+# IDE and development
+.chainlit/
 .gradio/
-test_app.py
+
+# Environment files
+.env

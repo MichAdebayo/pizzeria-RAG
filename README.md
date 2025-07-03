@@ -1,304 +1,186 @@
-# 🍕 Pizzeria RAG Assistant
+# 🍕 Pizzeria RAG - Assistant de Recherche Multi-Documents
 
-A multi-agent Retrieval-Augmented Generation (RAG) system for pizzeria customer support, built with LangChain and Gradio.
+Un système RAG (Retrieval-Augmented Generation) moderne pour interroger plusieurs menus de pizzerias avec Ollama et ChromaDB.
 
-## 📋 Overview
+## 🚀 Fonctionnalités
 
-This system helps pizzeria customers get information about:
-- Pizza menus and descriptions
-- Ingredient lists and recipes  
-- Allergen information (with safety protocols)
-- Nutritional information
-- Prices and availability
+- **RAG Multi-Documents**: Recherche simultanée dans plusieurs menus de pizzerias
+- **Interface Moderne**: Chainlit et Gradio pour une expérience utilisateur optimale
+- **Local-First**: Utilise Ollama pour les embeddings et LLM (pas de dépendance cloud)
+- **Architecture Modulaire**: Code propre, maintenable et extensible
+- **Processing Intelligent**: Extraction et indexation automatique des PDFs
 
-### Key Features
-
-- **Multi-Agent Architecture**: Specialized agents for different query types
-- **Advanced PDF Processing**: Handles text PDFs, scanned documents, and complex layouts
-- **OCR Support**: Extracts text from image-based PDFs
-- **Safety-First Allergen Checking**: High confidence thresholds for allergy-related queries
-- **Local LLM Support**: Works with Ollama/local models
-- **Fallback Systems**: Graceful degradation when components are unavailable
-
-## 🚀 Quick Start
-
-### Prerequisites
-
-1. **Python 3.8+**
-2. **Ollama** (for local LLM): [Install Ollama](https://ollama.ai)
-3. **Tesseract OCR** (for scanned PDFs): 
-   ```bash
-   # macOS
-   brew install tesseract
-   
-   # Ubuntu/Debian
-   sudo apt-get install tesseract-ocr
-   
-   # Windows
-   # Download from: https://github.com/UB-Mannheim/tesseract/wiki
-   ```
-
-### Installation
-
-1. **Clone and setup**:
-   ```bash
-   git clone <your-repo>
-   cd pizzeria-RAG
-   pip install -r requirements.txt
-   ```
-
-2. **Start Ollama and download model**:
-   ```bash
-   ollama serve
-   ollama pull llama3.2:latest
-   ```
-
-3. **Add your PDF documents**:
-   ```bash
-   # Place your pizza-related PDFs in:
-   docs/raw_pdfs/
-   ```
-
-4. **Run setup**:
-   ```bash
-   python scripts/setup_environment.py
-   ```
-
-5. **Launch the interface**:
-   ```bash
-   python src/interface/gradio_app.py
-   ```
-
-## 📁 Project Structure
+## 🛠️ Architecture
 
 ```
 pizzeria-RAG/
-├── config/                     # Configuration files
-│   ├── settings.py            # Project settings
-│   ├── agents_config.yaml     # LangChain agent configuration
-│   └── extraction_config.yaml # Document processing configuration
-├── docs/                      # Documents and data
-│   ├── raw_pdfs/             # Input PDF files
-│   ├── processed/            # Processed documents
-│   └── validation/           # Quality validation results
+├── config/                 # Configuration centralisée
+├── data/                   # Données traitées et base vectorielle
+├── docs/raw_pdfs/          # Documents PDF sources
+├── processors/             # Traitement des documents
 ├── src/
-│   ├── core/                 # Core system components
-│   │   ├── langchain_manager.py    # LangChain orchestration
-│   │   ├── vector_store_manager.py # Vector store operations
-│   │   └── document_processor.py   # Document processing pipeline
-│   ├── extractors/           # PDF/document extraction
-│   │   ├── pdf_extractor.py  # PDF text extraction
-│   │   ├── ocr_extractor.py  # OCR for scanned documents
-│   │   ├── table_extractor.py # Table extraction from PDFs
-│   │   ├── recipe_extractor.py # Recipe information extraction
-│   │   └── text_extractor.py # Plain text extraction
-│   ├── parsers/              # Content parsing and classification
-│   │   ├── document_parser.py # Document type detection
-│   │   ├── pizza_parser.py   # Pizza information parsing
-│   │   ├── allergen_parser.py # Allergen information parsing
-│   │   └── recipe_parser.py  # Recipe parsing
-│   ├── tools/                # LangChain tools (agents)
-│   │   ├── pizza_search_tool.py     # Pizza information search
-│   │   ├── allergen_check_tool.py   # Allergen safety checking
-│   │   ├── ingredient_lookup_tool.py # Ingredient information
-│   │   └── nutrition_info_tool.py   # Nutritional information
-│   ├── utils/                # Utilities
-│   │   ├── chunking.py       # Document chunking strategies
-│   │   └── quality_assessment.py # Quality assessment
-│   └── interface/
-│       └── gradio_app.py     # Web interface
-├── data/                     # Generated data
-│   ├── vector_stores/        # Vector embeddings
-│   └── processed_documents/  # Processed document cache
-├── scripts/
-│   └── setup_environment.py # Setup script
-└── logs/                     # Application logs
+│   ├── apps/              # Applications utilisateur
+│   │   ├── chainlit_app.py    # Interface chat moderne
+│   │   └── gradio_app.py      # Interface web alternative
+│   ├── core/              # Fonctionnalités principales
+│   │   ├── pipeline.py        # Pipeline principal
+│   │   ├── rag_engine.py      # Moteur RAG complet
+│   │   └── vector_store.py    # Gestion embeddings & ChromaDB
+│   └── extractors/        # Extracteurs de contenu
 ```
 
-## 🔧 Configuration
+## 📋 Prérequis
 
-### Model Configuration
+1. **Ollama** installé et configuré
+2. **Python 3.9+**
+3. **Modèles Ollama**:
+   - `llama3.2:latest` (chat)
+   - `mxbai-embed-large` (embeddings)
 
-Edit `config/agents_config.yaml`:
+## 🔧 Installation
 
-```yaml
-langchain_config:
-  llm:
-    provider: "ollama"
-    model: "llama3.2:latest"  # Change model here
-    temperature: 0.1
-  
-  embeddings:
-    provider: "huggingface"
-    model: "mixedbread-ai/mxbai-embed-large"
+1. **Cloner le projet**:
+```bash
+git clone <repository-url>
+cd pizzeria-RAG
 ```
 
-### Document Processing
+2. **Créer l'environnement virtuel**:
+```bash
+python -m venv .venv
+source .venv/bin/activate  # Linux/Mac
+# ou .venv\Scripts\activate  # Windows
+```
 
-Edit `config/extraction_config.yaml` to customize:
-- OCR settings and languages
-- Quality thresholds
-- Chunking strategies
-- Document classification rules
+3. **Installer les dépendances**:
+```bash
+pip install -r requirements.txt
+```
 
-## 🔍 Usage Examples
+4. **Démarrer Ollama** (dans un terminal séparé):
+```bash
+ollama serve
+```
 
-### Web Interface
+5. **Télécharger les modèles**:
+```bash
+ollama pull llama3.2:latest
+ollama pull mxbai-embed-large
+```
 
-1. Start the Gradio app: `python src/interface/gradio_app.py`
-2. Open http://localhost:7860
-3. Ask questions like:
-   - "Quelles pizzas avez-vous au menu?"
-   - "La pizza Margherita contient-elle du gluten?"
-   - "Quels sont les ingrédients de la pizza Quattro Stagioni?"
+## 🎯 Utilisation
 
-### Programmatic Usage
+### Interface Chainlit (Recommandée)
+```bash
+./start_chainlit.sh
+```
+Accès: http://localhost:8000
 
+### Interface Gradio (Alternative)
+```bash
+./start_gradio.sh
+```
+Accès: http://localhost:7860
+
+### Utilisation directe en Python
 ```python
-from src.core.langchain_manager import LangChainManager
+from src.core.rag_engine import LLMInterface
 
-# Initialize the system
-manager = LangChainManager('config/agents_config.yaml')
-
-# Ask questions
-response = manager.query("Avez-vous des pizzas sans lactose?")
-print(response['response'])
+llm = LLMInterface()
+result = llm.answer_question("Quelles pizzas végétariennes avez-vous?")
+print(result['answer'])
 ```
 
-## 🛠️ Document Processing Pipeline
+## 💬 Exemples de Questions
 
-The system processes documents through multiple stages:
+- **Générales**: "Quelles pizzas avez-vous?"
+- **Spécifiques**: "Chez Anchor Pizza, quel est le prix de la Margherita?"
+- **Comparatives**: "Comparez les prix entre Marco Fuso et Anchor Pizza"
+- **Détaillées**: "Quels sont les ingrédients du Triomphe végé?"
 
-1. **Extraction**: Multiple methods with fallbacks
-   - `pdfplumber` for structured PDFs
-   - `PyMuPDF` for complex layouts
-   - `Tesseract OCR` for scanned documents
-   - `EasyOCR` as OCR fallback
+## 🔧 Commandes Système (Chainlit)
 
-2. **Classification**: Automatic document type detection
-   - Menu catalogs
-   - Allergen tables
-   - Recipe documents
-   - Nutritional information
+- `/status` - Statut détaillé du système
+- `/documents` - Liste des documents disponibles
+- `/process` - Traiter/retraiter les documents
+- `/help` - Aide complète
 
-3. **Parsing**: Extract structured information
-   - Pizza names and descriptions
-   - Ingredient lists
-   - Allergen matrices
-   - Price information
+## 📁 Données
 
-4. **Chunking**: Create vector-store-ready chunks
-   - Semantic chunking by content type
-   - Preserve important relationships
-   - Add relevant metadata
+Le système traite automatiquement les PDFs dans `docs/raw_pdfs/`:
+- **Anchor Pizza**: Menu et services
+- **Marco Fuso**: Recettes et techniques
 
-5. **Vector Storage**: Store in Chroma vector database
-   - Separate stores by content type
-   - Rich metadata for filtering
-   - Optimized for retrieval
+Les données traitées sont stockées dans:
+- `data/processed/` - JSONs structurés
+- `data/vector_db/` - Base vectorielle ChromaDB
 
-## 🔒 Safety Features
+## ⚙️ Configuration
 
-### Allergen Information
-- **99% confidence threshold** for allergen-related responses
-- **Safety fallback messages** when confidence is low
-- **Source attribution** for all allergen information
-- **Clear disclaimers** advising direct restaurant contact for severe allergies
+Modifiez `config/config.py` pour ajuster:
+- Modèles Ollama utilisés
+- Paramètres de chunking
+- Température du LLM
+- Ports et endpoints
 
-### Error Handling
-- **Graceful degradation** when components fail
-- **Comprehensive logging** for debugging
-- **Fallback responses** maintain system availability
-- **Input validation** and sanitization
+## 🐛 Dépannage
 
-## 🚨 Troubleshooting
+### Problèmes courants:
 
-### Common Issues
-
-1. **"LangChain not available"**
-   ```bash
-   pip install langchain langchain-community langchain-huggingface
-   ```
-
-2. **"Ollama connection failed"**
+1. **Ollama non connecté**:
    ```bash
    ollama serve
-   # In another terminal:
-   ollama pull llama3.2:latest
+   curl http://localhost:11434/api/tags
    ```
 
-3. **"OCR extraction failed"**
+2. **Modèles manquants**:
    ```bash
-   # Install Tesseract
-   brew install tesseract  # macOS
-   sudo apt install tesseract-ocr  # Linux
+   ollama list
+   ollama pull llama3.2:latest
+   ollama pull mxbai-embed-large
    ```
 
-4. **"No documents processed successfully"**
-   - Check PDF files are in `docs/raw_pdfs/`
-   - Verify files are readable (not password-protected)
-   - Check logs in `logs/` directory
+3. **Documents non indexés**:
+   - Utilisez `/process` dans Chainlit
+   - Ou vérifiez `data/vector_db/`
 
-### Logs
+4. **Problèmes de performance**:
+   - Réduisez `chunk_size` dans la config
+   - Vérifiez la RAM disponible
 
-Check these log files for detailed error information:
-- `logs/setup.log` - Setup process
-- `logs/extraction.log` - Document processing
-- `logs/app.log` - Application runtime
+## 🚀 Développement
 
-## 🔄 Development
+### Structure du code:
+- **Modulaire**: Chaque composant a sa responsabilité
+- **Type Hints**: Code typé pour une meilleure maintenance
+- **Logging**: Traçabilité complète des opérations
+- **Tests**: Framework pytest intégré
 
-### Adding New Document Types
+### Ajouter de nouveaux documents:
+1. Placer le PDF dans `docs/raw_pdfs/`
+2. Ajouter la configuration dans `config/config.py`
+3. Relancer le traitement via `/process`
 
-1. **Add classification patterns** in `config/extraction_config.yaml`
-2. **Create parser** in `src/parsers/`
-3. **Update chunking strategy** in `src/utils/chunking.py`
-4. **Add vector store** in `config/agents_config.yaml`
+## 📄 Licence
 
-### Adding New Tools
+Ce projet est sous licence MIT. Voir `LICENSE` pour plus de détails.
 
-1. **Create tool class** in `src/tools/`
-2. **Inherit from BaseToolMixin**
-3. **Register in agents_config.yaml**
-4. **Update tool imports** in `src/tools/__init__.py`
+## 🤝 Contribution
 
-### Testing
+Les contributions sont bienvenues! Merci de:
+1. Fork le projet
+2. Créer une branche feature
+3. Commit vos changements
+4. Pousser vers la branche
+5. Ouvrir une Pull Request
 
-```bash
-# Test document processing
-python scripts/setup_environment.py
+## 📞 Support
 
-# Test specific components
-python -c "from src.extractors import PDFExtractor; print('Extractors working')"
-python -c "from src.core.langchain_manager import LangChainManager; print('LangChain working')"
-```
-
-## 📊 Monitoring
-
-### System Status
-- Check vector store statistics
-- Monitor extraction quality scores
-- Review confidence thresholds
-- Track response times
-
-### Performance Tuning
-- Adjust chunk sizes for your document types
-- Optimize embedding model selection
-- Configure OCR parameters for your PDF quality
-- Tune LLM temperature and parameters
-
-## 🤝 Contributing
-
-1. **Document Processing**: Improve extraction for specific PDF layouts
-2. **Agent Development**: Add specialized tools for specific queries
-3. **Safety Features**: Enhance allergen detection and validation
-4. **Performance**: Optimize vector search and chunking strategies
-5. **UI/UX**: Improve the Gradio interface
-
-## 📝 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
+En cas de problème:
+1. Vérifiez la section Dépannage
+2. Consultez les logs de l'application
+3. Ouvrez une issue sur GitHub
 
 ---
 
-**⚠️ Important**: This system provides information assistance but should not replace direct communication with restaurant staff for critical allergen and safety information.
+**Développé avec ❤️ pour une expérience RAG moderne et efficace**
