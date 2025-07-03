@@ -1,47 +1,47 @@
-# 🍕 Pizzeria RAG - Assistant de Recherche Multi-Documents
+# 🍕 Pizzeria RAG - Multi-Document Search Assistant
 
 <div align="center">
   <img src="assets/pizza_asset.webp" alt="Pizzeria RAG System" width="800">
 </div>
 
-Un système RAG (Retrieval-Augmented Generation) moderne pour interroger plusieurs menus de pizzerias avec Ollama et ChromaDB.
+A modern RAG (Retrieval-Augmented Generation) system for querying multiple pizzeria menus with Ollama and ChromaDB.
 
-## 🚀 Fonctionnalités
+## 🚀 Features
 
-- **RAG Multi-Documents**: Recherche simultanée dans plusieurs menus de pizzerias
-- **Interface Moderne**: Chainlit et Gradio pour une expérience utilisateur optimale
-- **Local-First**: Utilise Ollama pour les embeddings et LLM (pas de dépendance cloud)
-- **Architecture Modulaire**: Code propre, maintenable et extensible
-- **Processing Intelligent**: Extraction et indexation automatique des PDFs
+- **Multi-Document RAG**: Simultaneous search across multiple pizzeria menus
+- **Modern Interface**: Chainlit and Gradio for optimal user experience
+- **Local-First**: Uses Ollama for embeddings and LLM (no cloud dependency)
+- **Modular Architecture**: Clean, maintainable and extensible code
+- **Intelligent Processing**: Automatic PDF extraction and indexing
 
 ## 🛠️ Architecture
 
 ```
 pizzeria-RAG/
-├── assets/                 # Images et ressources
+├── assets/                 # Images and resources
 │   └── pizza_asset.webp
-├── config/                 # Configuration centralisée
+├── config/                 # Centralized configuration
 │   └── config.py
-├── data/                   # Données traitées et base vectorielle
-│   ├── processed/         # JSONs structurés des documents
-│   └── vector_db/         # Base vectorielle ChromaDB (git-ignoré)
-├── docs/                   # Documentation et sources (git-ignoré)
-│   └── raw_pdfs/          # Documents PDF sources
-├── logs/                   # Fichiers de logs (git-ignoré)
-├── processors/             # Traitement des documents
+├── data/                   # Processed data and vector database
+│   ├── processed/         # Structured document JSONs
+│   └── vector_db/         # ChromaDB vector database (git-ignored)
+├── docs/                   # Documentation and sources (git-ignored)
+│   └── raw_pdfs/          # Source PDF documents
+├── logs/                   # Log files (git-ignored)
+├── processors/             # Document processing
 │   ├── __init__.py
 │   └── document_processor.py
-├── src/                    # Code source principal
+├── src/                    # Main source code
 │   ├── __init__.py
-│   ├── apps/              # Applications utilisateur
+│   ├── apps/              # User applications
 │   │   ├── __init__.py
-│   │   ├── chainlit_app.py    # Interface chat moderne
-│   │   └── gradio_app.py      # Interface web alternative
-│   ├── core/              # Fonctionnalités principales
-│   │   ├── pipeline.py        # Pipeline principal
-│   │   ├── rag_engine.py      # Moteur RAG complet
-│   │   └── vector_store.py    # Gestion embeddings & ChromaDB
-│   └── extractors/        # Extracteurs de contenu
+│   │   ├── chainlit_app.py    # Modern chat interface
+│   │   └── gradio_app.py      # Alternative web interface
+│   ├── core/              # Core functionality
+│   │   ├── pipeline.py        # Main pipeline
+│   │   ├── rag_engine.py      # Complete RAG engine
+│   │   └── vector_store.py    # Embeddings & ChromaDB management
+│   └── extractors/        # Content extractors
 │       ├── __init__.py
 │       ├── base_extractor.py
 │       ├── ocr_extractor.py
@@ -49,207 +49,207 @@ pizzeria-RAG/
 │       ├── recipe_extractor.py
 │       ├── table_extractor.py
 │       └── text_extractor.py
-├── chainlit.md             # Configuration Chainlit
-├── requirements.txt        # Dépendances Python
-├── start_chainlit.sh       # Script de lancement Chainlit
-├── start_gradio.sh         # Script de lancement Gradio
-├── .gitignore             # Fichiers ignorés par Git
-└── README.md              # Documentation du projet
+├── chainlit.md             # Chainlit configuration
+├── requirements.txt        # Python dependencies
+├── start_chainlit.sh       # Chainlit launch script
+├── start_gradio.sh         # Gradio launch script
+├── .gitignore             # Git ignored files
+└── README.md              # Project documentation
 ```
 
-## 📋 Prérequis
+## 📋 Prerequisites
 
-1. **Ollama** installé et configuré
+1. **Ollama** installed and configured
 2. **Python 3.9+**
-3. **Modèles Ollama**:
+3. **Ollama Models**:
    - `llama3.2:latest` (chat)
    - `mxbai-embed-large` (embeddings)
 
 ## 🔧 Installation
 
-1. **Cloner le projet**:
+1. **Clone the project**:
 ```bash
 git clone <repository-url>
 cd pizzeria-RAG
 ```
 
-2. **Créer l'environnement virtuel**:
+2. **Create virtual environment**:
 ```bash
 python -m venv .venv
 source .venv/bin/activate  # Linux/Mac
-# ou .venv\Scripts\activate  # Windows
+# or .venv\Scripts\activate  # Windows
 ```
 
-3. **Installer les dépendances**:
+3. **Install dependencies**:
 ```bash
 pip install -r requirements.txt
 ```
 
-4. **Démarrer Ollama** (dans un terminal séparé):
+4. **Start Ollama** (in a separate terminal):
 ```bash
 ollama serve
 ```
 
-5. **Télécharger les modèles**:
+5. **Download models**:
 ```bash
 ollama pull llama3.2:latest
 ollama pull mxbai-embed-large
 ```
 
-## 🎯 Utilisation
+## 🎯 Usage
 
-### Interface Chainlit (Recommandée)
+### Chainlit Interface (Recommended)
 ```bash
 ./start_chainlit.sh
 ```
-**Accès:** http://localhost:8000
+**Access:** http://localhost:8000
 
-**Fonctionnalités:**
-- Chat interactif moderne
-- Commandes système intégrées (`/status`, `/documents`, `/process`, `/help`)
-- Affichage en temps réel du statut du système
-- Interface épurée sans informations techniques parasites
+**Features:**
+- Modern interactive chat
+- Integrated system commands (`/status`, `/documents`, `/process`, `/help`)
+- Real-time system status display
+- Clean interface without technical clutter
 
-### Interface Gradio (Alternative)
+### Gradio Interface (Alternative)
 ```bash
 ./start_gradio.sh
 ```
-**Accès:** http://localhost:7860
+**Access:** http://localhost:7860
 
-**Fonctionnalités:**
-- Interface web simple et intuitive
-- Chat avec avatars utilisateur/assistant
-- Onglet d'aide intégré
-- Parfait pour les démos et tests rapides
+**Features:**
+- Simple and intuitive web interface
+- Chat with user/assistant avatars
+- Integrated help tab
+- Perfect for demos and quick testing
 
-### Utilisation directe en Python
+### Direct Python Usage
 ```python
 from src.core.rag_engine import LLMInterface
 
 llm = LLMInterface()
-result = llm.answer_question("Quelles pizzas végétariennes avez-vous?")
+result = llm.answer_question("What vegetarian pizzas do you have?")
 print(result['answer'])
 ```
 
-## 💬 Exemples de Questions
+## 💬 Example Questions
 
-- **Générales**: "Quelles pizzas avez-vous?"
-- **Spécifiques**: "Chez Anchor Pizza, quel est le prix de la Margherita?"
-- **Comparatives**: "Comparez les prix entre Marco Fuso et Anchor Pizza"
-- **Détaillées**: "Quels sont les ingrédients du Triomphe végé?"
+- **General**: "What pizzas do you have?"
+- **Specific**: "At Anchor Pizza, what's the price of the Margherita?"
+- **Comparative**: "Compare prices between Marco Fuso and Anchor Pizza"
+- **Detailed**: "What are the ingredients in the Veggie Triumph?"
 
-## 🔧 Commandes Système (Chainlit)
+## 🔧 System Commands (Chainlit)
 
-- `/status` - Statut détaillé du système
-- `/documents` - Liste des documents disponibles
-- `/process` - Traiter/retraiter les documents
-- `/help` - Aide complète
+- `/status` - Detailed system status
+- `/documents` - List available documents
+- `/process` - Process/reprocess documents
+- `/help` - Complete help
 
-## 📁 Données
+## 📁 Data
 
-Le système traite automatiquement les PDFs dans `docs/raw_pdfs/`:
-- **Anchor Pizza**: Menu et services
-- **Marco Fuso**: Recettes et techniques
+The system automatically processes PDFs in `docs/raw_pdfs/`:
+- **Anchor Pizza**: Menu and services
+- **Marco Fuso**: Recipes and techniques
 
-Les données traitées sont stockées dans:
-- `data/processed/` - JSONs structurés
-- `data/vector_db/` - Base vectorielle ChromaDB
+Processed data is stored in:
+- `data/processed/` - Structured JSONs
+- `data/vector_db/` - ChromaDB vector database
 
 ## ⚙️ Configuration
 
-Modifiez `config/config.py` pour ajuster:
-- Modèles Ollama utilisés
-- Paramètres de chunking
-- Température du LLM
-- Ports et endpoints
+Modify `config/config.py` to adjust:
+- Ollama models used
+- Chunking parameters
+- LLM temperature
+- Ports and endpoints
 
-### Sécurité et Git:
-- **Dossiers protégés**: `data/`, `docs/`, `logs/` exclus du versioning
-- **Base vectorielle**: ChromaDB stockée localement et non exposée
-- **Fichiers sensibles**: `.env`, logs et caches automatiquement ignorés
-- **Historique propre**: Suppression complète des fichiers sensibles du Git
+### Security and Git:
+- **Protected folders**: `data/`, `docs/`, `logs/` excluded from versioning
+- **Vector database**: ChromaDB stored locally and not exposed
+- **Sensitive files**: `.env`, logs and caches automatically ignored
+- **Clean history**: Complete removal of sensitive files from Git
 
-## 🐛 Dépannage
+## 🐛 Troubleshooting
 
-### Problèmes courants:
+### Common issues:
 
-1. **Ollama non connecté**:
+1. **Ollama not connected**:
    ```bash
    ollama serve
    curl http://localhost:11434/api/tags
    ```
 
-2. **Modèles manquants**:
+2. **Missing models**:
    ```bash
    ollama list
    ollama pull llama3.2:latest
    ollama pull mxbai-embed-large
    ```
 
-3. **Scripts de lancement**:
+3. **Launch scripts**:
    ```bash
-   # Rendre les scripts exécutables
+   # Make scripts executable
    chmod +x start_chainlit.sh start_gradio.sh
    
-   # Vérifier l'environnement virtuel
+   # Check virtual environment
    source .venv/bin/activate
    ```
 
-4. **Documents non indexés**:
-   - Utilisez `/process` dans Chainlit
-   - Ou vérifiez `data/vector_db/`
+4. **Documents not indexed**:
+   - Use `/process` in Chainlit
+   - Or check `data/vector_db/`
 
-5. **Problèmes de performance**:
-   - Réduisez `chunk_size` dans la config
-   - Vérifiez la RAM disponible
+5. **Performance issues**:
+   - Reduce `chunk_size` in config
+   - Check available RAM
 
-6. **Erreurs Gradio**:
+6. **Gradio errors**:
    ```bash
-   # Mise à jour Gradio si nécessaire
+   # Update Gradio if necessary
    pip install --upgrade gradio
    ```
 
-## 🚀 Développement
+## 🚀 Development
 
-### Améliorations récentes:
-- **Interface Chainlit épurée**: Système de statut déplacé vers les commandes système
-- **Réponses utilisateur propres**: Suppression des informations techniques des réponses
-- **Architecture refactorisée**: Organisation claire du code en modules
-- **Gestion des avatars**: Interfaces utilisateur modernes avec avatars
-- **Scripts de lancement**: Démarrage simplifié avec vérifications automatiques
+### Recent improvements:
+- **Clean Chainlit interface**: Status system moved to system commands
+- **Clean user responses**: Removal of technical information from responses
+- **Refactored architecture**: Clear code organization in modules
+- **Avatar management**: Modern user interfaces with avatars
+- **Launch scripts**: Simplified startup with automatic checks
 
-### Structure du code:
-- **Modulaire**: Chaque composant a sa responsabilité
-- **Type Hints**: Code typé pour une meilleure maintenance
-- **Logging**: Traçabilité complète des opérations
-- **Async/Await**: Interface non-bloquante pour une meilleure UX
-- **Gestion d'erreurs**: Robustesse et récupération automatique
+### Code structure:
+- **Modular**: Each component has its responsibility
+- **Type Hints**: Typed code for better maintenance
+- **Logging**: Complete operation traceability
+- **Async/Await**: Non-blocking interface for better UX
+- **Error handling**: Robustness and automatic recovery
 
-### Ajouter de nouveaux documents:
-1. Placer le PDF dans `docs/raw_pdfs/`
-2. Ajouter la configuration dans `config/config.py`
-3. Relancer le traitement via `/process` (Chainlit) ou l'interface Gradio
+### Adding new documents:
+1. Place PDF in `docs/raw_pdfs/`
+2. Add configuration in `config/config.py`
+3. Restart processing via `/process` (Chainlit) or Gradio interface
 
-## 📄 Licence
+## 📄 License
 
-Ce projet est sous licence MIT. Voir `LICENSE` pour plus de détails.
+This project is under MIT license. See `LICENSE` for more details.
 
-## 🤝 Contribution
+## 🤝 Contributing
 
-Les contributions sont bienvenues! Merci de:
-1. Fork le projet
-2. Créer une branche feature
-3. Commit vos changements
-4. Pousser vers la branche
-5. Ouvrir une Pull Request
+Contributions are welcome! Please:
+1. Fork the project
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Open a Pull Request
 
 ## 📞 Support
 
-En cas de problème:
-1. Vérifiez la section Dépannage
-2. Consultez les logs de l'application
-3. Ouvrez une issue sur GitHub
+In case of issues:
+1. Check the Troubleshooting section
+2. Check application logs
+3. Open an issue on GitHub
 
 ---
 
-**Développé avec ❤️ pour une expérience RAG moderne et efficace**
+**Developed with ❤️ for a modern and efficient RAG experience**
