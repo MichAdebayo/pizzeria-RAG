@@ -15,7 +15,5 @@ ollama
 chainlit 
 gradio
 
-# OCR capabilities (optional)
-pytesseract  # used in ocr_extractor.py
-Pillow  # imported as PIL in ocr_extractor.py
-numpy  # used in ocr_extractor.py
+# Data processing
+numpy 
