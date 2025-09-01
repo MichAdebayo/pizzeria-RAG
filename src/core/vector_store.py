@@ -1,20 +1,26 @@
-"""
-Modular vector store manager for the pizzeria RAG system
-Based on the working simple_vector_store.py, now supporting multiple documents
-"""
-
 import json
 import chromadb
 from pathlib import Path
 from typing import List, Dict, Optional, Union
 import logging
 import ollama
-from config.config import config, DocumentConfig
+from config.config import config
+
 
 class VectorStore:
-    """Vector store manager for multiple documents using ChromaDB with Ollama embeddings"""
+    """
+    Manages the vector database for document storage and retrieval in the pizzeria RAG system.
+    Handles embedding generation, document chunking, collection management, and search operations.
+
+    This class provides methods to add documents, search for relevant content, and retrieve statistics
+    for all collections using Ollama embeddings and ChromaDB as the backend.
+    """
     
     def __init__(self):
+        """
+        Initializes the VectorStore with database path, embedding model, logger, and ChromaDB client.
+        Prepares collections for each document and tests the Ollama embedding model connection.
+        """
         self.db_path = Path(config.vector_store.db_path)
         self.db_path.mkdir(parents=True, exist_ok=True)
         self.embedding_model = config.models.embedding_model
@@ -32,7 +38,16 @@ class VectorStore:
         self._test_ollama_connection()
     
     def _generate_ollama_embedding(self, text: str) -> List[float]:
-        """Generate embedding using Ollama (same as working simple version)"""
+        """
+        Generates an embedding vector for the given text using the Ollama embedding model.
+        Returns the embedding as a list of floats, or a zero vector as a fallback on error.
+
+        Args:
+            text (str): The text to generate an embedding for.
+
+        Returns:
+            List[float]: The embedding vector for the text.
+        """
         try:
             response = ollama.embeddings(model=self.embedding_model, prompt=text)
             return response['embedding']
@@ -42,7 +57,10 @@ class VectorStore:
             return [0.0] * 1024
     
     def _test_ollama_connection(self):
-        """Test if Ollama is running and model is available (same as working simple version)"""
+        """
+        Tests the connection to the Ollama embedding model to ensure it is available.
+        Logs the status of the embedding model, and provides instructions if the connection fails.
+        """
         try:
             # Test embedding generation
             test_response = ollama.embeddings(model=self.embedding_model, prompt="test")
@@ -52,7 +70,18 @@ class VectorStore:
             self.logger.info("Make sure Ollama is running: ollama serve")
     
     def chunk_text(self, text: str, chunk_size: int = None, overlap: int = None) -> List[str]: # type: ignore
-        """Split text into overlapping chunks (same as working simple version)"""
+        """
+        Splits the input text into chunks of specified size with optional overlap for embedding and storage.
+        Returns a list of text chunks suitable for vectorization and retrieval.
+
+        Args:
+            text (str): The text to be chunked.
+            chunk_size (int, optional): The number of words per chunk. Defaults to config value.
+            overlap (int, optional): The number of overlapping words between chunks. Defaults to config value.
+
+        Returns:
+            List[str]: A list of text chunks.
+        """
         chunk_size = chunk_size or config.vector_store.chunk_size
         overlap = overlap or config.vector_store.overlap
         
@@ -67,17 +96,29 @@ class VectorStore:
         return chunks
     
     def get_or_create_collection(self, document_name: str):
-        """Get or create collection for a specific document"""
+        """
+        Retrieves an existing ChromaDB collection for the specified document, or creates a new one if it does not exist.
+        Returns the collection object, ensuring it is stored in the internal collections dictionary.
+
+        Args:
+            document_name (str): The name of the document for which to get or create a collection.
+
+        Returns:
+            Any: The ChromaDB collection object for the document.
+
+        Raises:
+            Exception: If the collection cannot be created or accessed.
+        """
         if document_name in self.collections:
             return self.collections[document_name]
-        
+
         collection_name = config.get_collection_name(document_name)
-        
+
         try:
             # Try to get existing collection first
             collection = self.client.get_collection(name=collection_name)
             self.logger.info(f"Using existing collection: {collection_name}")
-        except:
+        except Exception:
             # Collection doesn't exist, create new one
             try:
                 doc_config = config.get_document_by_name(document_name)
@@ -93,13 +134,22 @@ class VectorStore:
                 self.logger.info(f"Created new collection: {collection_name}")
             except Exception as e:
                 self.logger.error(f"Error creating collection: {e}")
-                raise Exception(f"Could not create or access collection: {e}")
-        
+                raise Exception(f"Could not create or access collection: {e}") from e
+
         self.collections[document_name] = collection
         return collection
     
     def add_document(self, document_name: str) -> bool:
-        """Add processed JSON document to vector store (based on working simple version)"""
+        """
+        Adds a processed document to the vector store by chunking its content and generating embeddings.
+        Returns True if the document is successfully added, otherwise returns False.
+
+        Args:
+            document_name (str): The name of the document to add to the vector store.
+
+        Returns:
+            bool: True if the document is added successfully, False otherwise.
+        """
         try:
             doc_config = config.get_document_by_name(document_name)
             json_path = doc_config.processed_json_path
@@ -166,7 +216,18 @@ class VectorStore:
     
     def search(self, query: str, document_names: Optional[Union[str, List[str]]] = None, 
                n_results: int = 5) -> Dict:
-        """Search for relevant documents (enhanced from simple version to support multiple docs)"""
+        """
+        Searches the vector store for relevant content matching the query across specified documents.
+        Returns a dictionary with the query, searched documents, and a list of the top matching results.
+
+        Args:
+            query (str): The search query to embed and match against the vector store.
+            document_names (Optional[Union[str, List[str]]]): Document names to search, or None for all.
+            n_results (int): The maximum number of results to return.
+
+        Returns:
+            Dict: A dictionary containing the query, searched documents, and search results.
+        """
         try:
             # Generate embedding for the query
             query_embedding = self._generate_ollama_embedding(query)
@@ -222,7 +283,13 @@ class VectorStore:
             return {"query": query, "searched_documents": [], "results": []}
     
     def get_stats(self) -> Dict:
-        """Get statistics for all collections"""
+        """
+        Retrieves statistics about the vector store, including the number of collections and documents.
+        Returns a dictionary with counts and details for each collection in the vector store.
+
+        Returns:
+            Dict: A dictionary containing total collections, total documents, and per-collection stats.
+        """
         stats = {
             "total_collections": 0,
             "total_documents": 0,
@@ -250,7 +317,13 @@ class VectorStore:
         return stats
     
     def add_all_documents(self) -> Dict[str, bool]:
-        """Add all configured documents to vector store"""
+        """
+        Adds all configured documents to the vector store by processing and embedding their content.
+        Returns a dictionary mapping document names to their addition success status.
+
+        Returns:
+            Dict[str, bool]: A dictionary with document names as keys and success status as values.
+        """
         results = {}
         
         for doc_config in config.documents:
@@ -258,7 +331,8 @@ class VectorStore:
             results[doc_config.name] = self.add_document(doc_config.name)
         
         # Summary
-        successful = sum(1 for success in results.values() if success)
+        successful = sum(bool(success)
+                     for success in results.values())
         total = len(results)
         self.logger.info(f"📊 Vector store update complete: {successful}/{total} documents successful")
         
