@@ -197,14 +197,6 @@ Modify `config/config.py` to adjust:
 - LLM temperature
 - Ports and endpoints
 
-### Security and Git:
-- **Protected folders**: `data/`, `docs/`, `logs/` excluded from versioning
-- **Vector database**: ChromaDB stored locally and not exposed
-- **Sensitive files**: `.env`, logs and caches automatically ignored
-- **Clean history**: Complete removal of sensitive files from Git
-- **Allergen Configuration**: Comprehensive allergen detection with 14 major allergens
-- **Safety Features**: Always-visible allergen warnings and alternative suggestions
-
 ## 🐛 Troubleshooting
 
 ### Common issues:
