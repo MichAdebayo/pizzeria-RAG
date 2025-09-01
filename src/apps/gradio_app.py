@@ -1,13 +1,8 @@
-"""
-Gradio interface for the Pizzeria RAG system
-Clean web interface with document filtering and system management
-"""
-
 import gradio as gr
 import logging
 import sys
 from pathlib import Path
-from typing import List, Tuple, Optional
+from typing import List, Tuple
 
 # Add project root to path
 project_root = Path(__file__).parent.parent.parent
@@ -26,7 +21,16 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 def get_bot_response(history: List) -> List:
-    """Get bot response for the last user message"""
+    """
+    Processes the latest user message in the Gradio chat history and generates a bot response.
+    Answers the user's question using the RAG pipeline and appends the assistant's reply to the chat history.
+
+    Args:
+        history (List): The chat history containing user and assistant messages.
+
+    Returns:
+        List: The updated chat history including the assistant's response.
+    """
     if not history or history[-1]["role"] != "user":
         return history
     
