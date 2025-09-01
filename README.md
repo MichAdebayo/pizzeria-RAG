@@ -19,43 +19,36 @@ A modern RAG (Retrieval-Augmented Generation) system for querying multiple pizze
 
 ```
 pizzeria-RAG/
-├── assets/                 # Images and resources
+├── assets/                  # Images and resources
 │   └── pizza_asset.webp
-├── config/                 # Centralized configuration
+├── config/                  # Centralized configuration
 │   └── config.py
-├── data/                   # Processed data and vector database
-│   ├── processed/         # Structured document JSONs
-│   └── vector_db/         # ChromaDB vector database (git-ignored)
-├── docs/                   # Documentation and sources (git-ignored)
-│   └── raw_pdfs/          # Source PDF documents
-├── logs/                   # Log files (git-ignored)
-├── processors/             # Document processing
+├── data/                    # Processed data and vector database
+│   ├── processed/           # Structured document JSONs
+│   └── vector_db/           # ChromaDB vector database (git-ignored)
+├── docs/                    # Documentation and sources (git-ignored)
+│   └── raw_pdfs/            # Source PDF documents
+├── logs/                    # Log files (git-ignored)
+├── processors/              # Document processing
 │   ├── __init__.py
 │   └── document_processor.py
-├── src/                    # Main source code
+├── src/                     # Main source code
 │   ├── __init__.py
-│   ├── apps/              # User applications
+│   ├── apps/                # User applications
 │   │   ├── __init__.py
-│   │   ├── chainlit_app.py    # Modern chat interface
-│   │   └── gradio_app.py      # Alternative web interface
-│   ├── core/              # Core functionality
-│   │   ├── pipeline.py        # Main pipeline
-│   │   ├── rag_engine.py      # Complete RAG engine
-│   │   └── vector_store.py    # Embeddings & ChromaDB management
-│   └── extractors/        # Content extractors
-│       ├── __init__.py
-│       ├── base_extractor.py
-│       ├── ocr_extractor.py
-│       ├── pdf_extractor.py
-│       ├── recipe_extractor.py
-│       ├── table_extractor.py
-│       └── text_extractor.py
-├── chainlit.md             # Chainlit configuration
-├── requirements.txt        # Python dependencies
-├── start_chainlit.sh       # Chainlit launch script
-├── start_gradio.sh         # Gradio launch script
-├── .gitignore             # Git ignored files
-└── README.md              # Project documentation
+│   │   ├── chainlit_app.py      # Chainlit chat interface
+│   │   └── gradio_app.py        # Gradio web interface
+│   └── core/                # Core RAG logic
+│       ├── pipeline.py          # Main pipeline
+│       ├── rag_engine.py        # RAG engine (allergen logic)
+│       └── vector_store.py      # Embeddings & ChromaDB management
+│    
+├── chainlit.md              # Chainlit configuration
+├── requirements.txt         # Python dependencies
+├── start_chainlit.sh        # Chainlit launch script
+├── start_gradio.sh          # Gradio launch script
+├── .gitignore               # Git ignored files
+└── README.md                # Project documentation
 ```
 
 ## 📋 Prerequisites
