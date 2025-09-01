@@ -1,8 +1,3 @@
-"""
-Modular document processor for the pizzeria RAG system
-Based on the working simple_pdf_processor.py, now generalized for any document
-"""
-
 import json
 import logging
 from pathlib import Path
@@ -11,13 +6,28 @@ import fitz  # PyMuPDF
 from config.config import config, DocumentConfig
 
 class DocumentProcessor:
-    """Process PDF documents into structured JSON format for the RAG system"""
+    """
+    Handles the extraction and processing of documents for the pizzeria RAG system.
+    Provides methods to extract text from PDFs, process documents into structured data, and manage batch processing.
+
+    This class supports single and batch document processing, saving results in structured JSON format,
+    and integrates with the system configuration for document management.
+    """
     
     def __init__(self):
         self.logger = logging.getLogger(__name__)
     
     def extract_text_from_pdf(self, pdf_path: str) -> List[Dict[str, Any]]:
-        """Extract text from PDF, maintaining page structure"""
+        """
+        Extracts text content from each page of a PDF file and returns structured sections.
+        Returns a list of dictionaries containing page number, content, and word count for each page.
+
+        Args:
+            pdf_path (str): The file path to the PDF document.
+
+        Returns:
+            List[Dict[str, Any]]: A list of section dictionaries with page, content, and word count.
+        """
         try:
             doc = fitz.open(pdf_path)
             sections = []
@@ -42,7 +52,16 @@ class DocumentProcessor:
             return []
     
     def process_document(self, document_config: DocumentConfig) -> bool:
-        """Process a single document according to its configuration"""
+        """
+        Processes a single document by extracting text from its PDF and saving structured data to JSON.
+        Returns True if the document is successfully processed and saved, otherwise returns False.
+
+        Args:
+            document_config (DocumentConfig): The configuration object for the document to process.
+
+        Returns:
+            bool: True if the document is processed and saved successfully, False otherwise.
+        """
         try:
             pdf_path = Path(document_config.pdf_path)
             if not pdf_path.exists():
@@ -92,7 +111,13 @@ class DocumentProcessor:
             return False
     
     def process_all_documents(self) -> Dict[str, bool]:
-        """Process all configured documents"""
+        """
+        Processes all documents defined in the system configuration and saves their structured data.
+        Returns a dictionary mapping document names to their processing success status.
+
+        Returns:
+            Dict[str, bool]: A dictionary with document names as keys and processing success as values.
+        """
         results = {}
         
         for doc_config in config.documents:
@@ -100,14 +125,24 @@ class DocumentProcessor:
             results[doc_config.name] = self.process_document(doc_config)
         
         # Summary
-        successful = sum(1 for success in results.values() if success)
+        successful = sum(bool(success)
+                     for success in results.values())
         total = len(results)
         self.logger.info(f"📊 Processing complete: {successful}/{total} documents successful")
         
         return results
     
     def process_document_by_name(self, document_name: str) -> bool:
-        """Process a specific document by name"""
+        """
+        Processes a single document by its name using the system configuration.
+        Returns True if the document is successfully processed, otherwise returns False.
+
+        Args:
+            document_name (str): The name of the document to process.
+
+        Returns:
+            bool: True if the document is processed successfully, False otherwise.
+        """
         try:
             doc_config = config.get_document_by_name(document_name)
             return self.process_document(doc_config)
