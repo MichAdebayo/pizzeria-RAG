@@ -4,7 +4,20 @@
   <img src="assets/pizza_asset.webp" alt="Pizzeria RAG System" width="800">
 </div>
 
-A modern RAG (Retrieval-Augmented Generation) system for querying multiple pizzeria menus with Ollama and ChromaDB.
+## 📝 Overview
+
+Pizzeria RAG is a modern, production-ready Retrieval-Augmented Generation (RAG) system designed for multi-document search and intelligent querying of pizzeria menus. Built for both technical and non-technical users, it combines powerful local language models (Ollama) with a robust vector database (ChromaDB) to deliver fast, accurate, and context-aware answers about menu items, prices, ingredients, and more.
+
+Key highlights:
+- **Multi-Document Search:** Query across multiple pizzeria menus and sources simultaneously, with results grouped by restaurant.
+- **Smart Allergen Detection:** Automatically detects allergens in both user questions and menu items, providing clear safety warnings and alternative recommendations for sensitive users.
+- **Modern User Interfaces:** Choose between a conversational Chainlit chat app or a simple Gradio web interface, both designed for clarity and ease of use.
+- **Local-First Privacy:** All data and models run locally—no cloud dependencies, ensuring privacy and control over your data.
+- **Automatic Document Processing:** Effortlessly extract, process, and index new PDF menus with built-in document processors and extractors.
+- **Extensible & Maintainable:** Modular codebase with clear separation of concerns, type hints, and robust error handling for easy customization and scaling.
+- **Security by Design:** Sensitive data, logs, and vector databases are protected and excluded from version control.
+
+Whether you're a restaurant owner, developer, or customer, Pizzeria RAG makes it easy to get instant, safe, and reliable answers about your favorite pizzas and ingredients.
 
 ## 🚀 Features
 
