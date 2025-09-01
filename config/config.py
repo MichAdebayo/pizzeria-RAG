@@ -1,11 +1,7 @@
-"""
-Configuration for the modular pizzeria RAG system
-Based on the working simple_* implementation, now generalized for multiple documents
-"""
-
 from dataclasses import dataclass
 from typing import List, Dict, Any, Optional
 from pathlib import Path
+
 
 @dataclass
 class ModelConfig:
@@ -99,7 +95,13 @@ class ModularConfig:
         self.documents = self._init_documents()
     
     def _init_documents(self) -> List[DocumentConfig]:
-        """Initialize document configurations by auto-discovering PDFs in raw_pdfs directory"""
+        """
+        Initializes the list of document configurations by scanning the raw_pdfs directory for PDF files.
+        Returns a list of DocumentConfig objects for each discovered PDF, creating names and descriptions automatically.
+
+        Returns:
+            List[DocumentConfig]: A list of configuration objects for all discovered documents.
+        """
         documents = []
         
         # Create the raw_pdfs directory if it doesn't exist
@@ -142,24 +144,64 @@ class ModularConfig:
         return documents
     
     def _create_directories(self):
-        """Create necessary directories"""
+        """
+        Creates necessary directories for raw PDFs, processed data, and logs if they do not already exist.
+        Ensures the required folder structure is present for document management and system operation.
+
+        Returns:
+            None
+        """
         for path in [self.raw_pdfs_path, self.processed_path, self.logs_path]:
             path.mkdir(parents=True, exist_ok=True)
     
     def get_document_by_name(self, name: str) -> DocumentConfig:
-        """Get document configuration by name"""
+        """
+        Retrieves the DocumentConfig object for a document by its internal name.
+        Returns the configuration object if found, otherwise raises a ValueError.
+
+        Args:
+            name (str): The internal name of the document to retrieve.
+
+        Returns:
+            DocumentConfig: The configuration object for the specified document.
+
+        Raises:
+            ValueError: If the document with the given name is not found.
+        """
         for doc in self.documents:
             if doc.name == name:
                 return doc
         raise ValueError(f"Document '{name}' not found")
     
     def get_collection_name(self, document_name: str) -> str:
-        """Get ChromaDB collection name for a document"""
+        """
+        Generates the collection name for a document in the vector store using the configured prefix.
+        Returns the formatted collection name as a string.
+
+        Args:
+            document_name (str): The name of the document for which to generate the collection name.
+
+        Returns:
+            str: The formatted collection name for the vector store.
+        """
         return f"{self.vector_store.collection_prefix}_{document_name}_ollama"
     
     def add_document(self, name: str, pdf_path: str, description: str, 
                     language: str = "fr", content_type: str = "menu"):
-        """Add a new document to the configuration"""
+        """
+        Adds a new document to the configuration with the specified details.
+        Returns the newly created DocumentConfig object after appending it to the documents list.
+
+        Args:
+            name (str): The internal name for the document.
+            pdf_path (str): The file path to the PDF document.
+            description (str): A description of the document.
+            language (str, optional): The language of the document. Defaults to "fr".
+            content_type (str, optional): The type of content. Defaults to "menu".
+
+        Returns:
+            DocumentConfig: The configuration object for the newly added document.
+        """
         processed_json_path = f"data/processed/{name}_processed.json"
         
         new_doc = DocumentConfig(
@@ -175,21 +217,42 @@ class ModularConfig:
         return new_doc
     
     def get_available_documents(self) -> Dict[str, str]:
-        """Get a dictionary of available documents (name -> description)"""
+        """
+        Retrieves a dictionary of available documents with their names and descriptions.
+        Returns a mapping of document names to their descriptions for use in selection or display.
+
+        Returns:
+            Dict[str, str]: A dictionary with document names as keys and descriptions as values.
+        """
         return {doc.name: doc.description for doc in self.documents}
     
     def get_company_name(self, document_name: str) -> str:
-        """Get clean company name from document name"""
+        """
+        Retrieves the company name associated with a document by extracting it from the document's description.
+        Returns the company name as a string, or a cleaned version of the document name if extraction fails.
+
+        Args:
+            document_name (str): The name of the document to retrieve the company name for.
+
+        Returns:
+            str: The extracted company name or a cleaned document name as fallback.
+        """
         try:
             doc_config = self.get_document_by_name(document_name)
             # Extract company name from description (everything before the first hyphen)
             return doc_config.description.split(' - ')[0]
-        except:
+        except Exception:
             # Fallback: clean the document name
             return document_name.replace('_', ' ').title()
     
     def get_companies_summary(self) -> Dict[str, Dict]:
-        """Get summary of all companies/documents"""
+        """
+        Generates a summary of all companies represented by the configured documents.
+        Returns a dictionary mapping document names to company details including name, description, PDF path, and language.
+
+        Returns:
+            Dict[str, Dict]: A dictionary with document names as keys and company details as values.
+        """
         companies = {}
         for doc in self.documents:
             company_name = self.get_company_name(doc.name)
