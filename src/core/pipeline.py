@@ -18,16 +18,32 @@ from src.core.vector_store import VectorStore
 from src.core.rag_engine import LLMInterface
 
 class Pipeline:
-    """Main pipeline for processing documents and managing the RAG system"""
+    """
+    Main pipeline class for the modular pizzeria RAG system.
+    Handles document processing, vector store management, and LLM-based querying.
+
+    This class provides methods to process all documents, process a single document,
+    test the system with sample queries, check system status, and add new documents.
+    """
     
     def __init__(self):
+        """
+        Initializes the Pipeline with logging, document processor, vector store, and LLM interface.
+        Sets up the main components required for document processing and querying.
+        """
         self.logger = logging.getLogger(__name__)
         self.processor = DocumentProcessor()
         self.vector_store = VectorStore()
         self.llm_interface = LLMInterface()
     
     def process_all_documents(self) -> bool:
-        """Process all documents through the complete pipeline"""
+        """
+        Processes all documents through the complete pipeline and updates the vector store.
+        Returns True if all documents are successfully processed and added to the vector store.
+
+        Returns:
+            bool: True if all documents are processed and added successfully, False otherwise.
+        """
         self.logger.info("🚀 Starting complete pipeline for all documents...")
         
         # Step 1: Process PDFs to JSON
@@ -50,7 +66,16 @@ class Pipeline:
         return processed_success == total_docs and vector_success == total_docs
     
     def process_single_document(self, document_name: str) -> bool:
-        """Process a single document through the complete pipeline"""
+        """
+        Processes a single document through the pipeline and updates the vector store.
+        Returns True if the document is successfully processed and added to the vector store.
+
+        Args:
+            document_name (str): The name of the document to process.
+
+        Returns:
+            bool: True if the document is processed and added successfully, False otherwise.
+        """
         self.logger.info(f"🚀 Starting pipeline for document: {document_name}")
         
         try:
@@ -84,7 +109,16 @@ class Pipeline:
             return False
     
     def test_system(self, document_name: Optional[str] = None) -> Dict:
-        """Test the system with sample queries"""
+        """
+        Tests the system by running a set of sample queries and collecting results.
+        Returns a summary of test outcomes, including success and context statistics.
+
+        Args:
+            document_name (Optional[str]): The name of the document to test against, or None to test all.
+
+        Returns:
+            Dict: A dictionary containing test statistics and individual results.
+        """
         self.logger.info("🧪 Testing system...")
         
         test_questions = [
@@ -113,11 +147,28 @@ class Pipeline:
         }
     
     def get_system_status(self) -> Dict:
-        """Get comprehensive system status"""
+        """
+        Retrieves the current status of the system, including LLM and vector store health.
+        Returns a dictionary summarizing the status of system components and documents.
+
+        Returns:
+            Dict: A dictionary containing system status information.
+        """
         return self.llm_interface.get_system_status()
     
     def add_new_document(self, name: str, pdf_path: str, description: str) -> bool:
-        """Add a new document to the system"""
+        """
+        Adds a new document to the system, processes it, and updates the vector store.
+        Returns True if the document is successfully added, processed, and indexed.
+
+        Args:
+            name (str): The name of the new document.
+            pdf_path (str): The file path to the PDF document.
+            description (str): A description of the document.
+
+        Returns:
+            bool: True if the document is added and processed successfully, False otherwise.
+        """
         try:
             # Add to configuration
             doc_config = config.add_document(name, pdf_path, description)
