@@ -1,12 +1,6 @@
-"""
-Chainlit interface for the Pizzeria RAG system
-Modern chat interface with document filtering and system management
-"""
-
 import chainlit as cl
 import logging
 import asyncio
-from typing import List, Optional, Dict
 import sys
 from pathlib import Path
 
@@ -36,17 +30,17 @@ async def store_session_data(status, available_docs):
 async def start():
     """Initialize the chat session"""
     logger.info("🍕 Starting new Chainlit session")
-    
+
     # Get system status asynchronously
     loop = asyncio.get_event_loop()
     status = await loop.run_in_executor(None, llm_interface.get_system_status)
     available_docs = await loop.run_in_executor(None, llm_interface.get_available_documents)
-    
+
     # Store status data in session
     await store_session_data(status, available_docs)
-    
+
     # Create welcome message (clean, without system status)
-    welcome_msg = f"""# 🍕 Bienvenue dans l'Assistant Pizzeria!
+    welcome_msg = """# 🍕 Bienvenue dans l'Assistant Pizzeria!
 
 ## 💬 Comment utiliser:
 1. **Questions générales**: "Quelles pizzas avez-vous?" → Recherche dans tous les documents
@@ -69,16 +63,25 @@ async def start():
 
 Posez votre question et je vous aiderai! 🚀
 """
-    
+
     await cl.Message(content=welcome_msg).send()
-    
+
     # Store session data
     cl.user_session.set("available_documents", available_docs)
     cl.user_session.set("system_status", status)
 
 @cl.on_message
 async def main(message: cl.Message):
-    """Handle incoming messages"""
+    """
+    Handles incoming user messages in the Chainlit chat interface.
+    Processes user questions, executes special commands, and sends responses based on the RAG pipeline.
+
+    Args:
+        message (cl.Message): The incoming message object from the user.
+
+    Returns:
+        None
+    """
     user_message = message.content.strip()
     
     if not user_message:
@@ -128,7 +131,16 @@ async def main(message: cl.Message):
     await cl.Message(content=response_content).send()
 
 async def handle_command(command: str):
-    """Handle special commands"""
+    """
+    Handles special slash commands sent by the user in the Chainlit chat.
+    Executes system status, document listing, processing, help, or returns an error for unknown commands.
+
+    Args:
+        command (str): The command string sent by the user.
+
+    Returns:
+        None
+    """
     
     if command == '/status':
         await show_status()
@@ -146,7 +158,13 @@ async def handle_command(command: str):
         await cl.Message(content=f"❓ **Commande inconnue:** `{command}`\n\nUtilisez `/help` pour voir les commandes disponibles.").send()
 
 async def show_status():
-    """Show detailed system status"""
+    """
+    Displays the current system status in the Chainlit chat, including LLM, vector store, and document health.
+    Retrieves status information asynchronously and sends a formatted status message to the user.
+
+    Returns:
+        None
+    """
     loop = asyncio.get_event_loop()
     status = await loop.run_in_executor(None, llm_interface.get_system_status)
     
@@ -188,52 +206,64 @@ async def show_status():
     await cl.Message(content=status_message).send()
 
 async def show_documents():
-    """Show available documents"""
+    """
+    Displays the list of available documents in the Chainlit chat.
+    Retrieves document information asynchronously and sends a formatted list to the user.
+
+    Returns:
+        None
+    """
     loop = asyncio.get_event_loop()
     available_docs = await loop.run_in_executor(None, llm_interface.get_available_documents)
-    
+
     if not available_docs:
         await cl.Message(content="❌ **Aucun document disponible**\n\nUtilisez `/process` pour traiter les documents.").send()
         return
-    
+
     doc_list = []
     for doc_name, company_name in available_docs.items():
         # Get document config for more info
         try:
             doc_config = config.get_document_by_name(doc_name)
             doc_list.append(f"- **{company_name}** ({doc_config.content_type}): {doc_config.description}")
-        except:
+        except Exception:
             doc_list.append(f"- **{company_name}**: {doc_name}")
-    
+
     message = f"""# 📚 Documents disponibles
 
 {chr(10).join(doc_list)}
 
 💡 **Astuce:** Vous pouvez mentionner un restaurant spécifique dans votre question pour obtenir des informations ciblées, ou poser une question générale pour comparer les options.
 """
-    
+
     await cl.Message(content=message).send()
 
 async def process_documents():
-    """Process/reprocess all documents"""
+    """
+    Processes all documents in the system and updates the vector store.
+    Runs document processing asynchronously, updates system status, and sends feedback messages to the user.
+
+    Returns:
+        None
+    """
     processing_msg = cl.Message(content="🔄 **Traitement des documents en cours...**\n\nCela peut prendre quelques minutes.")
     await processing_msg.send()
-    
+
     try:
         # Run processing in background
         success = await asyncio.get_event_loop().run_in_executor(None, pipeline.process_all_documents)
-        
+
         # Remove processing message
         try:
             await processing_msg.remove()
-        except:
+        except Exception:
             pass  # Ignore if already removed
-        
+
         if success:
             # Update system status
             status = llm_interface.get_system_status()
             cl.user_session.set("system_status", status)
-            
+
             status_msg = f"""✅ **Documents traités avec succès!**
 
 📊 **Nouveau statut:**
@@ -241,16 +271,16 @@ async def process_documents():
 - **Documents indexés**: {status['vector_store'].get('total_documents', 0)}
 
 Le système est prêt à répondre à vos questions! 🎉"""
-            
+
             await cl.Message(content=status_msg).send()
         else:
             await cl.Message(content="❌ **Erreur lors du traitement des documents**\n\nVérifiez les logs pour plus de détails.").send()
-            
+
     except Exception as e:
         logger.error(f"Error processing documents: {e}")
         try:
             await processing_msg.remove()
-        except:
+        except Exception:
             pass  # Ignore if already removed
         await cl.Message(content=f"❌ **Erreur**: {str(e)}").send()
 
