@@ -275,10 +275,6 @@ Modify `config/config.py` to adjust:
 2. Add configuration in `config/config.py`
 3. Restart processing via `/process` (Chainlit) or Gradio interface
 
-## 📄 License
-
-This project is under MIT license. See `LICENSE` for more details.
-
 ## 🤝 Contributing
 
 Contributions are welcome! Please:
@@ -295,6 +291,6 @@ In case of issues:
 2. Check application logs
 3. Open an issue on GitHub
 
----
+## 📄 License
 
-**Developed with ❤️ for a modern and efficient RAG experience**
+This project is under MIT license. See `LICENSE` for more details.
