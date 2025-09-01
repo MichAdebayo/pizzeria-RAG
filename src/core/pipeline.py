@@ -1,8 +1,3 @@
-"""
-Main pipeline for the modular pizzeria RAG system
-Process documents and manage the vector store
-"""
-
 import logging
 import argparse
 import sys
